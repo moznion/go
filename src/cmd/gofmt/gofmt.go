@@ -155,20 +155,26 @@ func processFile(filename string, in io.Reader, out io.Writer, stdin bool) error
 	return err
 }
 
-func visitFile(path string, f os.FileInfo, err error) error {
-	if err == nil && isGoFile(f) {
-		err = processFile(path, nil, os.Stdout, false)
-	}
-	// Don't complain if a file was deleted in the meantime (i.e.
-	// the directory changed concurrently while running gofmt).
-	if err != nil && !os.IsNotExist(err) {
-		report(err)
-	}
-	return nil
-}
+func walkDir(basePath string) {
+	pathOffset := len(basePath)
+	visitFile := func(path string, f os.FileInfo, err error) error {
+		if strings.Contains(path[pathOffset:], "vendor/") {
+			// Ignore `vendor/` directory
+			return nil
+		}
 
-func walkDir(path string) {
-	filepath.Walk(path, visitFile)
+		if err == nil && isGoFile(f) {
+			err = processFile(path, nil, os.Stdout, false)
+		}
+		// Don't complain if a file was deleted in the meantime (i.e.
+		// the directory changed concurrently while running gofmt).
+		if err != nil && !os.IsNotExist(err) {
+			report(err)
+		}
+		return nil
+	}
+
+	filepath.Walk(basePath, visitFile)
 }
 
 func main() {
