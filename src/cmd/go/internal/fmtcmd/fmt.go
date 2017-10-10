@@ -54,6 +54,8 @@ func runFmt(cmd *base.Command, args []string) {
 
 	gofmtOptions := gofmtFlag.Args()
 
+	// TODO consider default options: "-l", "-w"
+
 	for i := 0; i < procs; i++ {
 		go func() {
 			defer wg.Done()
