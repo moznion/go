@@ -8,7 +8,6 @@ package fmtcmd
 import (
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"sync"
 
@@ -19,11 +18,11 @@ import (
 	"cmd/internal/gofmt"
 )
 
-var gofmtFlag *gofmt.Flag
+var gofmtFlag gofmt.Flag
 
 func init() {
 	base.AddBuildFlagsNX(&CmdFmt.Flag)
-	gofmtFlag = gofmt.InitGofmtFlag(&CmdFmt.Flag)
+	gofmtFlag.InitGofmtFlag(&CmdFmt.Flag)
 }
 
 var CmdFmt = &base.Command{
@@ -53,35 +52,7 @@ func runFmt(cmd *base.Command, args []string) {
 	wg.Add(procs)
 	fileC := make(chan string, 2*procs)
 
-	var gofmtOptions []string
-
-	rv := reflect.ValueOf(*gofmtFlag)
-	fieldNum := rv.Type().NumField()
-	for i := 0; i < fieldNum; i++ {
-		f := rv.Field(i)
-
-		var ok bool
-		var name string
-		if name, ok = f.FieldByName("Name").Interface().(string); !ok {
-			panic("Name is not string")
-		}
-		name = "-" + name
-
-		// TODO Should treat "-l" and "-w" as default
-
-		v := f.FieldByName("Value")
-		if sv, ok := v.Interface().(string); ok {
-			if len(sv) > 0 {
-				gofmtOptions = append(gofmtOptions, name, sv)
-			}
-		} else if bv, ok := v.Interface().(bool); ok {
-			if bv {
-				gofmtOptions = append(gofmtOptions, name)
-			}
-		} else {
-			panic("Value type is not suitable")
-		}
-	}
+	gofmtOptions := gofmtFlag.Args()
 
 	for i := 0; i < procs; i++ {
 		go func() {

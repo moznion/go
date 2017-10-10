@@ -6,47 +6,53 @@ package gofmt
 
 import "flag"
 
-type boolFlag struct {
-	Name  string
-	Value bool
-}
-
-type stringFlag struct {
-	Name  string
-	Value string
-}
-
 type Flag struct {
-	List        boolFlag
-	Write       boolFlag
-	RewriteRule stringFlag
-	SimplifyAST boolFlag
-	DoDiff      boolFlag
-	AllErrors   boolFlag
-	Cpuprofile  stringFlag
+	List        bool
+	Write       bool
+	RewriteRule string
+	SimplifyAST bool
+	DoDiff      bool
+	AllErrors   bool
+	Cpuprofile  string
 }
 
-func InitGofmtFlag(fs *flag.FlagSet) *Flag {
-	f := Flag{
-		List:        boolFlag{Name: "l"},
-		Write:       boolFlag{Name: "w"},
-		RewriteRule: stringFlag{Name: "r"},
-		SimplifyAST: boolFlag{Name: "s"},
-		DoDiff:      boolFlag{Name: "d"},
-		AllErrors:   boolFlag{Name: "e"},
-		Cpuprofile:  stringFlag{Name: "cpuprofile"},
+func (f *Flag) Args() []string {
+	var args []string
+
+	if f.AllErrors {
+		args = append(args, "-e")
+	}
+	if f.Cpuprofile != "" {
+		args = append(args, "-cpuprofile", f.Cpuprofile)
+	}
+	if f.DoDiff {
+		args = append(args, "-d")
+	}
+	if f.List {
+		args = append(args, "-l")
+	}
+	if f.RewriteRule != "" {
+		args = append(args, "-r", f.RewriteRule)
+	}
+	if f.SimplifyAST {
+		args = append(args, "-s")
+	}
+	if f.Write {
+		args = append(args, "-w")
 	}
 
+	return args
+}
+
+func (f *Flag) InitGofmtFlag(fs *flag.FlagSet) {
 	// main operation modes
-	fs.BoolVar(&f.List.Value, f.List.Name, false, "list files whose formatting differs from gofmt's")
-	fs.BoolVar(&f.Write.Value, f.Write.Name, false, "write result to (source) file instead of stdout")
-	fs.StringVar(&f.RewriteRule.Value, f.RewriteRule.Name, "", "rewrite rule (e.g., 'a[b:len(a)] -> a[b:]')")
-	fs.BoolVar(&f.SimplifyAST.Value, f.SimplifyAST.Name, false, "simplify code")
-	fs.BoolVar(&f.DoDiff.Value, f.DoDiff.Name, false, "display diffs instead of rewriting files")
-	fs.BoolVar(&f.AllErrors.Value, f.AllErrors.Name, false, "report all errors (not just the first 10 on different lines)")
+	fs.BoolVar(&f.List, "l", false, "list files whose formatting differs from gofmt's")
+	fs.BoolVar(&f.Write, "w", false, "write result to (source) file instead of stdout")
+	fs.StringVar(&f.RewriteRule, "r", "", "rewrite rule (e.g., 'a[b:len(a)] -> a[b:]')")
+	fs.BoolVar(&f.SimplifyAST, "s", false, "simplify code")
+	fs.BoolVar(&f.DoDiff, "d", false, "display diffs instead of rewriting files")
+	fs.BoolVar(&f.AllErrors, "e", false, "report all errors (not just the first 10 on different lines)")
 
 	// debugging
-	fs.StringVar(&f.Cpuprofile.Value, f.Cpuprofile.Name, "", "write cpu profile to this file")
-
-	return &f
+	fs.StringVar(&f.Cpuprofile, "cpuprofile", "", "write cpu profile to this file")
 }

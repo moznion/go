@@ -17,11 +17,11 @@ import (
 )
 
 func initRewrite() {
-	if gofmtFlag.RewriteRule.Value == "" {
+	if gofmtFlag.RewriteRule == "" {
 		rewrite = nil // disable any previous rewrite
 		return
 	}
-	f := strings.Split(gofmtFlag.RewriteRule.Value, "->")
+	f := strings.Split(gofmtFlag.RewriteRule, "->")
 	if len(f) != 2 {
 		fmt.Fprintf(os.Stderr, "rewrite rule must be of the form 'pattern -> replacement'\n")
 		os.Exit(2)
